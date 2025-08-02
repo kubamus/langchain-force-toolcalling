@@ -2,7 +2,7 @@ import { ChatOllama } from "@langchain/ollama";
 import { tools } from "./tools";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { config } from "../config";
-import { parseResponse } from "./functions";
+import { askModel, parseResponse } from "./functions";
 
 const toolsDescription = `${tools.map((tool) => `${tool.name}: ${tool.description}: ${tool.schema}\n`)}`;
 
@@ -30,25 +30,15 @@ Example for direct message:
 
 const model = new ChatOllama({ model: config.model, baseUrl: config.baseUrl });
 
-try {
-  let chatMessages = [
-    new SystemMessage(prompt),
-    new HumanMessage(config.prompt),
-  ];
+let chatMessages = [
+  new SystemMessage(prompt),
+];
 
-  const response = await model.invoke(chatMessages);
-  const results = await parseResponse(response.content as string);
-  if(results.isToolResponse) {
-    chatMessages.push(new SystemMessage("Tools called successfully. Results: " + JSON.stringify(results, null, 2)));
-
-    chatMessages.push(new SystemMessage("Now, using the results from the tools, provide a final answer. You don't need to response in a valid JSON format, just provide the final answer."));
-    const finalResponse = await model.invoke(chatMessages);
-    console.log(finalResponse.content);
-  } else {
-    console.log(results.content);
-  }
-} catch (error) {
-  console.error("❌| =ERROR TOOL CALLING= |❌")
-  console.error(error);
-  console.error("❌| ==================== |❌")
+process.stdout.write(">>> ")
+for await (const line of console) {
+  const userInput = line.trim();
+  chatMessages.push(new HumanMessage(userInput));
+  const response = await askModel(model, chatMessages);
+  console.log(response);
+  process.stdout.write("\n>>> ")
 }
