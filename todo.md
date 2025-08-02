@@ -1,1 +1,2 @@
 - umozliwic zeby model mogl uzywac funkcji kiedy chce, a nie ze musi jej uzyc tylko po pierwszym pytaniu
+- dodać streaming 😭
